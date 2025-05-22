@@ -1,5 +1,3 @@
-import io.github.andrefigas.rustjni.RustJNI
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
