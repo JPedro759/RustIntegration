@@ -5,16 +5,19 @@ use jni::objects::{JClass, JValue};
 use jni::sys::{jstring, jint, jfloat, jobject, jboolean};
 //</RustJNI>
 
+// Import the modules directory
+mod modules;
+
+use modules::operations;
+
 #[no_mangle]
 pub extern "C" fn Java_com_example_calculatorapp_MainActivity_sayHello(
     env: JNIEnv,
-    _class: JClass,
+    _class: JClass
 ) -> jstring {
     let output = "Hello from Rust!";
 
-    env.new_string(output)
-        .expect("Couldn't create Java string!")
-        .into_raw()
+    env.new_string(output).expect("Couldn't create Java string!").into_raw()
 }
 
 #[no_mangle]
@@ -24,7 +27,7 @@ pub extern "C" fn Java_com_example_calculatorapp_MainActivity_sumIntNumbers(
     a: jint,
     b: jint
 ) -> jint {
-    a + b
+    operations::sum(a, b)
 }
 
 #[no_mangle]
@@ -34,7 +37,7 @@ pub extern "C" fn Java_com_example_calculatorapp_MainActivity_subtract(
     a: jint,
     b: jint
 ) -> jint {
-    a - b
+    operations::sub(a, b)
 }
 
 #[no_mangle]
@@ -44,7 +47,7 @@ pub extern "C" fn Java_com_example_calculatorapp_MainActivity_multiply(
     a: jint,
     b: jint
 ) -> jint {
-    a * b
+    operations::multi(a, b)
 }
 
 #[no_mangle]
@@ -54,20 +57,14 @@ pub extern "C" fn Java_com_example_calculatorapp_MainActivity_divide(
     dividend: jfloat,
     divisor: jfloat
 ) -> jobject {
-    let (result, status) = if divisor == 0.0 {
-        (0.0, false)
-    } else {
-        (dividend / divisor, true)
-    };
+    let result = operations::div(dividend, divisor);
 
     let class = env.find_class("com/example/calculatorapp/DivisionResponse")
         .expect("Couldn't find class!");
-
-    let response = env.new_object(
-        class,
-        "(FZ)V",
-        &[JValue::Float(result), JValue::Bool(status as jboolean)]
-    ).expect("Couldn't build object!");
     
+    let ctor_args = &[JValue::Float(result.value), JValue::Bool(result.status as jboolean)];
+
+    let response = env.new_object(class, "(FZ)V", ctor_args).expect("Couldn't build object!");
+
     response.as_raw()
 }
